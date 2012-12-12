@@ -30,23 +30,23 @@
       v)
     v))
 
-(defn occurs?
+(defn non-empty-seq?
+  [s]
+  (and (sequential? s) (seq s)))
+
+(defn occurs-check
   "Does x occur nested in or at v in s."
   [x v s]
   (let [v (walk v s)]
     (cond
       (lvar? v) (= x v)
-      (sequential? v) (or (occurs? x (first v) s)
-                          (occurs? x (rest v) s)))))
+      (non-empty-seq? v) (or (occurs-check x (first v) s)
+                             (occurs-check x (rest v) s)))))
 
 (defn ext-s
   [lvar val s]
-  (when-not (occurs? lvar val s)
+  (when-not (occurs-check lvar val s)
     (ext-s-no-check lvar val s)))
-
-(defn non-empty-seq?
-  [s]
-  (and (sequential? s) (seq s)))
 
 (defn unify
   [left right s]
@@ -211,19 +211,19 @@
   (let [q (lvar 'q)
         a (lvar 'a)
         b (lvar 'b)]
-    (occurs? q a {a q}))
+    (occurs-check q a {a q}))
   ;;=> true
 
   (let [q (lvar 'q)
         a (lvar 'a)
         b (lvar 'b)]
-    (occurs? q a {a [1 2 3 q]}))
+    (occurs-check q a {a [1 2 3 q]}))
   ;;=> true
 
   (let [q (lvar 'q)
         a (lvar 'a)
         b (lvar 'b)]
-    (occurs? q a {b q}))
+    (occurs-check q a {b q}))
   ;;=> false
 
   (ext-s (lvar 'q) 1 empty-s) ;;=> {_.q 1}
@@ -265,11 +265,18 @@
     (fn [] (nevero)))
 
   (run 2 [q]
-       (conde
-        [(fresh [x]
-                (== x :foo)
-                (== q x))]
-        [(== q 1)]
-        [(nevero)]))
+    (conde
+      [(fresh [x]
+         (== x :foo)
+         (== q x))]
+      [(== q 1)]
+      [(nevero)]))
+
+  (run* [q]
+    (== [1 q 3] [1 2 3]))
+
+  (run 1 [q]
+       (fresh [x y z]
+              (== q [x y z])))
 
   )
