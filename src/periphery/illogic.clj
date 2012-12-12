@@ -197,9 +197,11 @@
   "Projects the current value of bindings onto logic variables. Kinda
   sucks, though."
   [xs & gs]
-  (let [s (gensym "s_")]
+  (let [s (gensym "s_")
+        -walk (fn [g] `(walk ~g ~s))
+        bindings (vec (mapcat (juxt identity -walk) xs))]
     `(fn [~s]
-       (let ~(vec (mapcat (juxt identity (fn [g] `(walk ~g ~s))) xs))
+       (let ~bindings
          ((fresh [] ~@gs) ~s)))))
 
 
@@ -272,16 +274,16 @@
   (-inc (+ 1 2)) ;;=> fn
 
   (defn nevero
-    []
-    (fn [] (nevero)))
+    [& _]
+    (fn [& _] (nevero)))
 
   (run 2 [q]
     (conde
-      [(fresh [x]
+     [(nevero)]
+     [(fresh [x]
          (== x :foo)
          (== q x))]
-      [(== q 1)]
-      [(nevero)]))
+      [(== q 1)]))
 
   (run* [q]
     (== [1 q 3] [1 2 3]))
