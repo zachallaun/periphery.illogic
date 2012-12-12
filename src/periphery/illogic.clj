@@ -10,7 +10,7 @@
 
 (defn lvar
   [name]
-  (LogicVar. (symbol (str "_." name))))
+  (LogicVar. (symbol (str "_" name))))
 
 (defn lvar?
   [lvar]
