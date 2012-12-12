@@ -193,6 +193,17 @@
        (-inc
         (mplus* ~@(map make-bind* gs))))))
 
+(defmacro project
+  "Projects the current value of bindings onto logic variables. Kinda
+  sucks, though."
+  [xs & gs]
+  (let [s (gensym "s_")]
+    `(fn [~s]
+       (let ~(vec (mapcat (juxt identity (fn [g] `(walk ~g ~s))) xs))
+         ((fresh [] ~@gs) ~s)))))
+
+
+
 (comment
   (lvar 'foo) ;;=> _.foo
 
@@ -278,5 +289,11 @@
   (run 1 [q]
        (fresh [x y z]
               (== q [x y z])))
-
+  (run* [q]
+        (fresh [x y]
+               (== x 1)
+               (== y 2)
+               (project [x y]
+                        (== q (+ x y)))))
   )
+
